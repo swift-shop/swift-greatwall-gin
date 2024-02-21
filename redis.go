@@ -3,15 +3,26 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/redis/go-redis/v9"
+
+	"github.com/joho/godotenv"
 )
 
 var ctx = context.Background()
 
 func ExampleClient() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	Addr := os.Getenv("REDIS_ADDR")
+
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "127.0.0.1:6379",
+		Addr:     Addr,
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
