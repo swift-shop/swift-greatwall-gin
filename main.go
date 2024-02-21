@@ -1,25 +1,37 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
-func main() {
-	r := mux.NewRouter()
-
-	// 创建路由处理函数
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		// 在此处编写处理请求的逻辑
-		fmt.Fprintln(w, "欢迎访问Dior官网")
+func proxy(c *gin.Context) {
+	remote, err := url.Parse("https://laravel.com")
+	if err != nil {
+		panic(err)
 	}
 
-	// 将路由处理函数注册到路由器
-	r.HandleFunc("/", handler)
+	proxy := httputil.NewSingleHostReverseProxy(remote)
+	proxy.Director = func(req *http.Request) {
+		req.Header = c.Request.Header
+		req.Host = remote.Host
+		req.URL.Scheme = remote.Scheme
+		req.URL.Host = remote.Host
+		req.URL.Path = c.Param("proxyPath")
+	}
 
-	// 启动HTTP服务器并监听指定端口
-	log.Fatal(http.ListenAndServe(":8080", r))
+	proxy.ServeHTTP(c.Writer, c.Request)
+}
+
+func main() {
+	main.ExampleClient()
+
+	// r := gin.Default()
+
+	// r.Any("/*proxyPath", proxy)
+
+	// r.Run(":8080")
 }
